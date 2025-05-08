@@ -1,7 +1,7 @@
 
-# 🧠 Multi-PDF Document Classifier with FastAPI and Streamlit
+# 🧠 Multi-PDF Document Classifier using watsonx
 
-This project provides a full-stack AI-powered document classification system using **Watsonx**, **FastAPI**, and **Streamlit**. It enables batch uploading of PDF files, intelligent LLM-based labeling, and an interactive UI to view results.
+This project provides a full-stack AI-powered document classification system using **Watsonx**. It enables batch uploading of PDF files, intelligent LLM-based labeling, and an interactive UI to view results.
 
 ---
 ## Demo:

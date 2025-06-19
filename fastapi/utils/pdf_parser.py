@@ -19,7 +19,7 @@ def extract_tables_by_page(file_bytes: bytes) -> List[List[Dict]]:
             tables.append(page_tables if page_tables else [])
     return tables
 
-def extract_keywords_and_signals(pages: List[str]) -> Dict:
+def extract_keywords_and_signals(pages: List[str],table_flags: List[List[Dict]]) -> Dict:
     # Load and parse keyword map from environment variable
     keyword_signals_raw = os.getenv('KEYWORD_SIGNALS')
     try:
@@ -29,15 +29,17 @@ def extract_keywords_and_signals(pages: List[str]) -> Dict:
 
     signals = {key: 0 for key in keyword_signals}
     signals["currency_symbols"] = 0
-    signals["table_pages"] = 0  # Reserved for future
+    signals["table_pages"] = 0  
 
-    for text in pages:
+    for i, text in enumerate(pages):
         lower_text = text.lower()
 
         for key, terms in keyword_signals.items():
             signals[key] += sum(1 for term in terms if term in lower_text)
 
         signals["currency_symbols"] += len(re.findall(r"[$€₹]", text))
+        if i < len(table_flags) and table_flags[i]: # Check if page has tables
+            signals["table_pages"] += 1
 
     return signals
 

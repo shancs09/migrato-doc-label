@@ -66,6 +66,45 @@ def inference_llm_dutch(context_passages):
             - Geef het volledige antwoord in het **Nederlands**.
 
             ### Classificatierichtlijnen:
+            - Analyseer de volledige documentinhoud zorgvuldig, rekening houdend met zowel structuur als semantiek.
+            - Identificeer het **meest passende label** dat het doel van het document het beste samenvat.
+            - **Geef de voorkeur aan specificiteit:** Als de inhoud overeenkomt met veelvoorkomende zakelijke documenttypen, geef dan de voorkeur aan het *meest specifieke en gedetailleerde* label uit uw kennisbank. Als een zeer specifiek label niet geschikt is, overweeg dan bredere categorieën zoals (gepast vertaald):
+                "Factuur", "Notulen", "Agenda", "Interne Memo", "HR-beleidsdocument", "Technische Specificatie", "Productcatalogus", "Juridisch Contract", "Projectplanning", enz.
+                Als een document bijvoorbeeld een "Service Level Agreement" is, geef dan de voorkeur aan "Service Level Agreement" boven "Juridisch Contract" als die mate van specificiteit door de inhoud wordt ondersteund.
+            - Als het document hierboven niet duidelijk overeenkomt, gebruik dan uw beste oordeel om het **meest specifieke, geschikte en betekenisvolle label** te creëren dat mogelijk is op basis van de inhoud. Dit gecreëerde label moet het primaire doel en de inhoud van het document zo nauwkeurig mogelijk weergeven als uw verklaring.
+            - **Consistentiecontrole:** Het gekozen 'label' moet de kern van uw 'verklaring' direct en beknopt samenvatten.
+
+            ### Antwoordformaat (Moet geldige JSON zijn in dezelfde taal als het document):
+            ```json
+            {{
+            "label": "<Meest geschikte enkele label voor het document>",
+            "explanation": "<Korte uitleg waarom dit label is gekozen op basis van de inhoud. Het 'label' moet een beknopte en directe samenvatting zijn van deze uitleg.>"
+            }}
+            ```
+            Voeg niets toe buiten deze JSON-structuur.
+            <</SYS>>
+
+            Document Summary:
+            {doc_snippet}
+
+            Wat is het meest geschikte label voor dit document? [/INST] """
+
+    formatted_prompt = llm_instr.format(doc_snippet=context_passages)
+    generated_response = model_inference.generate(prompt=formatted_prompt, params=generate_params)
+    llm_response = generated_response['results'][0]['generated_text']
+    llm_json_response = extract_json(llm_response)
+    return llm_json_response
+
+def inference_llm_dutch_backup(context_passages):
+    llm_instr = """
+            <s>[INST] <<SYS>>
+            Je bent een uiterst capabele AI-assistent die documenten in meerdere talen intelligent classificeert. In deze taak analyseer je de verstrekte inhoud van een document en bepaal je het **meest geschikte enkele label** dat het type document het best beschrijft.
+
+            ### Taal van het Antwoord:
+            - **Ga ervan uit dat de documentinhoud in het Nederlands is.**
+            - Geef het volledige antwoord in het **Nederlands**.
+
+            ### Classificatierichtlijnen:
             - Analyseer de volledige inhoud, inclusief structuur en betekenis.
             - Bepaal het **beste label** dat het doel van het document samenvat.
             - Gebruik indien van toepassing een van de volgende labels (vertaald indien nodig):  
@@ -102,15 +141,59 @@ def inference_llm(context_passages):
     ### Classification Guidelines:
     - Carefully analyze the full document content, considering both structure and semantics.
     - Identify the **most appropriate label** that best summarizes the document’s purpose.
+    - **Prioritize Specificity:** If the content matches common business document types, prioritize the *most specific and granular* label from your knowledge base. If a highly specific label isn't suitable, then consider broader categories such as (translated appropriately):
+        "Invoice", "Meeting Minutes", "Agenda", "Internal Memo", "HR Policy Document", "Engineering Specification", "Product Catalog", "Legal Contract", "Project Timeline", "Research Paper", "Financial Report", "User Manual", etc.
+        For example, if a document is a "Service Level Agreement", prefer "Service Level Agreement" over "Legal Contract" if that level of specificity is supported by the content.
+    - If the document doesn't clearly match the above, use your best judgment to **create the most specific, suitable, and meaningful label** possible based on the content. This created label should accurately reflect the document's primary purpose and content as closely as your explanation.
+    - **Consistency Check:** The chosen 'label' must directly and concisely summarize the core idea presented in your 'explanation'.
+
+    ### Response Format (Must be valid JSON in same language as document):
+    ```json
+    {{
+      "label": "<Best single label for the document>",
+      "explanation": "<Brief explanation of why this label was chosen based on the content. The 'label' should be a concise and direct summary of this explanation.>"
+    }}
+    ```
+    Do not add anything outside this JSON structure.
+    <</SYS>>
+
+    Document Summary:
+    {doc_snippet}
+
+    What is the most suitable label for this document?
+    [/INST]
+    """
+
+    formatted_prompt = llm_instr.format(doc_snippet=context_passages)
+    generated_response = model_inference.generate(prompt=formatted_prompt, params=generate_params)
+    llm_response = generated_response['results'][0]['generated_text']
+    llm_json_response = extract_json(llm_response)
+    return llm_json_response
+
+def inference_llm_backup(context_passages):
+    llm_instr = """
+    <s>[INST] <<SYS>>
+   You are a highly capable AI assistant designed to intelligently classify documents in multiple languages. Your task is to analyze the provided multi-page document content and determine the **most suitable single label** that best describes the overall type of document.
+
+    ### Response Language:
+    - Detect the language of the provided content (e.g., English, German, French,Dutch).
+    - Respond entirely in the **same language** as the document content.
+
+    ### Classification Guidelines:
+    - Carefully analyze the full document content, considering both structure and semantics.
+    - Identify the **most appropriate label** that best summarizes the document’s purpose.
     - If the content matches common business document types, use one of the following (translated appropriately):  
     "Invoice", "Meeting Minutes", "Agenda", "Internal Memo", "HR Policy Document", "Engineering Specification", "Product Catalog", "Legal Contract", "Project Timeline", etc.
-    - If the document doesn't clearly match the above, use your best judgment to **create a suitable and meaningful label** based on the content.
+    - If the document doesn't clearly match the above, use your best judgment to **create the most specific, suitable, and meaningful label** possible based on the content. This created label should accurately reflect the document's primary purpose and content as closely as your explanation.
+
 
     ### Response Format (Must be valid JSON in same language as document):
     ```json
     {{
       "label": "<Best single label for the document>",
       "explanation": "<Brief explanation of why this label was chosen based on the content>"
+      "explanation": "<Brief explanation of why this label was chosen based on the content. The 'label' should be a concise and direct summary of this explanation.>"
+
     }}
     ```
     Do not add anything outside this JSON structure.

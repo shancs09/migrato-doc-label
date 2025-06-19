@@ -53,7 +53,7 @@ def process_document(file: UploadFile) -> DocumentLabelResponse:
 
     pages = extract_text_by_page(file_content)
     tables = extract_tables_by_page(file_content)
-    signals = extract_keywords_and_signals(pages)
+    signals = extract_keywords_and_signals(pages,tables)
     document_summary = build_structured_summary(pages, tables, signals)
     result = inference_llm_dutch(document_summary)
 
@@ -73,7 +73,7 @@ def process_document_nopreview(file: UploadFile) -> dict:
 
     pages = extract_text_by_page(file_content)
     tables = extract_tables_by_page(file_content)
-    signals = extract_keywords_and_signals(pages)
+    signals = extract_keywords_and_signals(pages,tables)
     document_summary = build_structured_summary(pages, tables, signals)
     result = inference_llm_dutch(document_summary)
 

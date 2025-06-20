@@ -71,27 +71,125 @@ pip install -r requirements.txt
 
 ## 🐳 Dockerized Deployment
 
-### Build and Push Docker Images
+Steps to build, test, push, and deploy a Dockerized FastAPI app (`migrato_fastapi`) to IBM Cloud Code Engine, along with an optional UI component.
+
+---
+
+## 🏗️ Build Docker Image(https://docs.docker.com/get-started/docker-concepts/building-images/build-tag-and-publish-an-image/)
 
 ```bash
 # FastAPI
 cd fastapi
-docker build -t <your-registry>/fastapi-doc-label:latest .
-docker push <your-registry>/fastapi-doc-label:latest
-
-# Streamlit
-cd ../streamlit
-docker build -t <your-registry>/streamlit-doc-label:latest .
-docker push <your-registry>/streamlit-doc-label:latest
+# Build the Docker image locally
+docker build -t migrato_fastapi .
 ```
+---
 
-### IBM Cloud Code Engine Deployment
+## 🚀 Run & Test Locally
 
 ```bash
-ibmcloud ce app create --name fastapi-doc-label   --image <your-registry>/fastapi-doc-label:latest   --port 8080
-
-ibmcloud ce app create --name streamlit-doc-label   --image <your-registry>/streamlit-doc-label:latest   --port 8501
+# Run the app on localhost
+docker run -p 8080:8080 migrato_fastapi
 ```
+
+Open your browser at: [http://localhost:8080](http://localhost:8080)
+
+---
+
+## 🍿 Tag and Push Image to IBM Cloud Container Registry (ICR)
+
+```bash
+# Tag the image for IBM Cloud Container Registry
+docker tag migrato_fastapi uk.icr.io/llm-lang/migrato_fastapi:latest
+
+# Push the image to ICR
+docker push uk.icr.io/llm-lang/migrato_fastapi:latest
+```
+
+> 🔐 Make sure you're logged into IBM Cloud CLI before pushing to the registry.
+
+Repeat same steps from streamlit-ui app directory as well
+
+---
+
+## ☁️ IBM Cloud CLI Commands (https://cloud.ibm.com/docs/cli?topic=cli-getting-started)
+
+### 1. 🔐 Login to IBM Cloud
+
+```bash
+ibmcloud login --sso
+```
+
+* Enter the one-time passcode from your email.
+* Select the appropriate account (e.g., `Ibm Migrato**`).
+* Target the default resource group:
+
+```bash
+ibmcloud target -g Default
+```
+
+---
+
+### 2. 📁 Create & Select a Code Engine Project
+
+```bash
+# List available projects
+ibmcloud ce project list
+
+# Create a new project
+ibmcloud ce project create --name migrato-doc-label
+
+# Select the project
+ibmcloud ce project select --name migrato-doc-label
+```
+
+---
+
+### 3. 🔐 Create a Registry Secret
+
+```bash
+ibmcloud ce registry create \
+  --name migrato-registry \
+  --server uk.icr.io \
+  --username iamapikey \
+  --password <YOUR_IBM_CLOUD_API_KEY>
+```
+
+---
+
+### 4. 🚢 Deploy FastAPI App
+
+```bash
+ibmcloud ce app create \
+  --name mg-doc-label \
+  --image uk.icr.io/llm-labeling/migrato_fastapi@sha256:<digest> \
+  --registry-secret migrato-registry \
+  --port 8080
+```
+
+---
+
+### 5. 🎨 Deploy Frontend UI (Optional)
+
+```bash
+ibmcloud ce app create \
+  --name mg-doc-label-ui \
+  --image uk.icr.io/llm-labeling/migrato_ui@sha256:<digest> \
+  --registry-secret migrato-registry \
+  --port 8501 \
+  --env FAST_API_URL=https://mg-doc-label.1v4xjh38ru11.eu-gb.codeengine.appdomain.cloud
+```
+
+---
+
+## 💻 Alternative: IBM Cloud Console
+
+> 🛍️ All the above steps — from project creation to app deployment — can also be performed using the **IBM Cloud Console UI**:
+
+1. Navigate to [IBM Cloud Code Engine](https://cloud.ibm.com/codeengine)
+2. Create a new project
+3. Connect container registry & deploy your application
+4. Configure environment variables, secrets, and ports as needed
 
 ---
 
